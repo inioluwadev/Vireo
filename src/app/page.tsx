@@ -19,12 +19,12 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <Header />
+      <Header launchDate={launchDate} />
       <main className="flex-grow">
         <HeroSection launchDate={launchDate} />
         <FeaturesSection />
         <AIInspirationSection />
-        <CtaSection />
+        <CtaSection launchDate={launchDate} />
       </main>
       <Footer />
     </div>

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Rocket } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface CountdownProps {
   targetDate: Date;
@@ -49,8 +52,14 @@ export function Countdown({ targetDate }: CountdownProps) {
 
   if (!timeLeft) {
     return (
-      <div className="text-center text-2xl font-bold text-primary">
-        We've Launched!
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <h2 className="text-2xl font-bold text-primary animate-pulse">We've Launched!</h2>
+        <Link href="/" passHref>
+          <Button size="lg" className="transition-transform duration-300 hover:scale-105">
+            <Rocket className="mr-2 h-5 w-5" />
+            Enter the Future
+          </Button>
+        </Link>
       </div>
     );
   }
