@@ -68,6 +68,8 @@ export async function addToWaitlist(
       return { message: "Something went wrong. Please try again.", success: false };
     }
 
+    revalidatePath('/admin');
+
     return {
       message: "Thank you! You're on the waitlist.",
       success: true,
