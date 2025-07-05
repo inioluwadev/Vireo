@@ -10,58 +10,6 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Terminal } from "lucide-react";
 import { FeaturesSettings } from "./features-settings";
 
-const users = [
-  {
-    id: "usr_1",
-    name: "Amina Okoro",
-    email: "amina.o@vireo.africa",
-    role: "Admin",
-    status: "Active",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-  {
-    id: "usr_2",
-    name: "Jide Bello",
-    email: "jide.b@vireo.com",
-    role: "Student",
-    status: "Active",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-  {
-    id: "usr_3",
-    name: "Fatima Al-Hassan",
-    email: "fatima.a@vireo.co",
-    role: "Architect",
-    status: "Banned",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-  {
-    id: "usr_4",
-    name: "Kwame Asante",
-    email: "kwame.a@vireo.io",
-    role: "Student",
-    status: "Active",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-  {
-    id: "usr_5",
-    name: "Zuri Kimani",
-    email: "zuri.k@vireo.design",
-    role: "Client",
-    status: "Active",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-   {
-    id: "usr_6",
-    name: "John Doe",
-    email: "john.d@vireo.com",
-    role: "Architect",
-    status: "Active",
-    avatarUrl: "https://placehold.co/100x100.png",
-  },
-];
-
-
 type WaitlistItem = {
   email: string;
   created_at: string;
@@ -197,10 +145,10 @@ export function AdminPage({
                 <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Manage Your Community</CardTitle>
-                    <CardDescription className="text-purple-300">View, ban, or promote users to admins. (Demo data)</CardDescription>
+                    <CardDescription className="text-purple-300">View, ban, or promote users to admins. (Feature in development)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <UsersTable users={users} />
+                    <UsersTable users={[]} />
                 </CardContent>
                 </Card>
             </TabsContent>

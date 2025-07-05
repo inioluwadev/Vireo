@@ -105,7 +105,16 @@ export async function updateSetting(prevState: any, formData: FormData) {
     }
 
     const key = formData.get('key') as string;
-    const value = formData.get('value') as string;
+    let value = formData.get('value') as string;
+
+    // Special handling for launchDate to ensure it's stored in UTC
+    if (key === 'launchDate' && value) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+            return { message: "Invalid date format provided.", success: false };
+        }
+        value = date.toISOString();
+    }
 
     const validated = settingSchema.safeParse({ key, value });
 
