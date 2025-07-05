@@ -11,6 +11,13 @@ export async function addToWaitlist(
   prevState: any,
   formData: FormData
 ) {
+  if (!supabase) {
+    return {
+      message: "Database connection not configured.",
+      success: false,
+    };
+  }
+
   const email = formData.get("email");
   const validated = emailSchema.safeParse(email);
 
