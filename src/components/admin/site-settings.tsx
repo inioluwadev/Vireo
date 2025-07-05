@@ -40,30 +40,31 @@ export function SiteSettings({ setting }: { setting?: SettingItem }) {
     }
   }, [state, toast]);
   
-  if (!setting) {
-      return (
-        <Alert variant="destructive" className="bg-red-500/10 border-red-500/50 text-red-300 [&>svg]:text-red-300">
-            <Terminal className="h-4 w-4" />
-            <AlertTitle>Setting not found!</AlertTitle>
-            <AlertDescription>The 'launchDate' setting could not be found in the database. Please add it to the `site_settings` table by running the schema.sql file.</AlertDescription>
-        </Alert>
-      );
-  }
+  const settingExists = !!setting;
+  const key = 'launchDate';
+  const description = 'The target date and time for the public launch countdown timer.';
 
   return (
     <form action={formAction} className="space-y-4">
-        <input type="hidden" name="key" value={setting.key} />
+        {!settingExists && (
+            <Alert variant="destructive" className="bg-red-500/10 border-red-500/50 text-red-300 [&>svg]:text-red-300">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Setting not found!</AlertTitle>
+                <AlertDescription>The '{key}' setting is missing. You can set it for the first time below.</AlertDescription>
+            </Alert>
+        )}
+        <input type="hidden" name="key" value={key} />
         <div className="space-y-2">
             <Label htmlFor="launchDate" className="flex items-center gap-2 text-base">
                 <Calendar className="h-4 w-4" />
                 Launch Date Countdown Target
             </Label>
-            <p className="text-sm text-purple-300">{setting.description}</p>
+            <p className="text-sm text-purple-300">{setting?.description || description}</p>
             <Input
               id="launchDate"
               name="value"
               type="datetime-local"
-              defaultValue={setting.value ? setting.value.slice(0, 16) : ""}
+              defaultValue={setting?.value ? setting.value.slice(0, 16) : ""}
               className="bg-gray-900/50 border-purple-500/50 focus:ring-purple-500"
             />
         </div>

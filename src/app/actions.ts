@@ -107,14 +107,14 @@ export async function updateSetting(prevState: any, formData: FormData) {
         return { message: validated.error.errors[0].message, success: false };
     }
     
+    // Using upsert to either create the setting if it doesn't exist, or update it if it does.
     const { error } = await supabase
         .from('site_settings')
-        .update({ value: validated.data.value })
-        .eq('key', validated.data.key);
+        .upsert({ key: validated.data.key, value: validated.data.value });
     
     if (error) {
         console.error("Update setting error:", error);
-        return { message: "Failed to update setting. " + error.message, success: false };
+        return { message: "Failed to save setting. " + error.message, success: false };
     }
 
     // Revalidate paths that use this setting so they show the new value
@@ -123,5 +123,5 @@ export async function updateSetting(prevState: any, formData: FormData) {
     }
     revalidatePath('/admin');
 
-    return { message: `Setting '${key}' updated successfully.`, success: true };
+    return { message: `Setting '${key}' saved successfully.`, success: true };
 }
