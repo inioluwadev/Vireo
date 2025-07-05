@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Save, Terminal, Type, Text } from "lucide-react";
+import { Calendar, Save, Terminal, Type, Text, LayoutGrid, Bot, Rocket } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "../ui/textarea";
 
@@ -16,6 +16,15 @@ type SettingItem = {
   value: string | null;
   description: string | null;
 };
+
+type SettingFormProps = {
+  settingKey: string;
+  label: string;
+  description: string;
+  Icon: React.ElementType;
+  settingsMap: Map<string, SettingItem>;
+  inputType?: "text" | "datetime-local" | "textarea";
+}
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -27,20 +36,14 @@ function SubmitButton() {
 }
 
 function SettingForm({
-  setting,
   settingKey,
   label,
   description,
   Icon,
+  settingsMap,
   inputType = "text",
-}: {
-  setting?: SettingItem;
-  settingKey: string;
-  label: string;
-  description: string;
-  Icon: React.ElementType;
-  inputType?: "text" | "datetime-local" | "textarea";
-}) {
+}: SettingFormProps) {
+  const setting = settingsMap.get(settingKey);
   const initialState = { message: "", success: false };
   const [state, formAction] = useFormState(updateSetting, initialState);
   const { toast } = useToast();
@@ -93,19 +96,12 @@ function SettingForm({
   )
 }
 
-export function SiteSettings({ 
-    launchDateSetting,
-    heroHeadlineSetting,
-    heroSubheadlineSetting
- }: { 
-    launchDateSetting?: SettingItem,
-    heroHeadlineSetting?: SettingItem,
-    heroSubheadlineSetting?: SettingItem,
- }) {
+export function SiteSettings({ settingsMap }: { settingsMap: Map<string, SettingItem> }) {
   return (
     <div className="space-y-8">
+        <h3 className="text-lg font-headline -mb-4">Launch & Hero</h3>
         <SettingForm
-            setting={launchDateSetting}
+            settingsMap={settingsMap}
             settingKey="launchDate"
             label="Launch Date Countdown Target"
             description="The target date and time for the public launch countdown timer."
@@ -113,7 +109,7 @@ export function SiteSettings({
             inputType="datetime-local"
         />
         <SettingForm
-            setting={heroHeadlineSetting}
+            settingsMap={settingsMap}
             settingKey="heroHeadline"
             label="Hero Headline"
             description="The main headline on the homepage hero section."
@@ -121,10 +117,77 @@ export function SiteSettings({
             inputType="text"
         />
         <SettingForm
-            setting={heroSubheadlineSetting}
+            settingsMap={settingsMap}
             settingKey="heroSubheadline"
             label="Hero Subheadline"
             description="The subheadline text below the main headline on the hero section."
+            Icon={Text}
+            inputType="textarea"
+        />
+        <h3 className="text-lg font-headline -mb-4 pt-4 border-t border-purple-500/30">Features Section</h3>
+         <SettingForm
+            settingsMap={settingsMap}
+            settingKey="featuresHeadline"
+            label="Features Headline"
+            description="The headline for the features section."
+            Icon={LayoutGrid}
+            inputType="text"
+        />
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="featuresSubheadline"
+            label="Features Subheadline"
+            description="The subheadline for the features section."
+            Icon={Text}
+            inputType="textarea"
+        />
+         <h3 className="text-lg font-headline -mb-4 pt-4 border-t border-purple-500/30">AI Section</h3>
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="aiInspirationHeadline"
+            label="AI Inspiration Headline"
+            description="The headline for the AI Inspiration section."
+            Icon={Bot}
+            inputType="text"
+        />
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="aiInspirationSubheadline"
+            label="AI Inspiration Subheadline"
+            description="The subheadline for the AI Inspiration section."
+            Icon={Text}
+            inputType="textarea"
+        />
+        <h3 className="text-lg font-headline -mb-4 pt-4 border-t border-purple-500/30">CTA Section</h3>
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="ctaUpcomingHeadline"
+            label="CTA Headline (Before Launch)"
+            description="Headline for the final call to action section when the countdown is active."
+            Icon={Rocket}
+            inputType="text"
+        />
+         <SettingForm
+            settingsMap={settingsMap}
+            settingKey="ctaUpcomingSubheadline"
+            label="CTA Subheadline (Before Launch)"
+            description="Subheadline for the final call to action section when the countdown is active."
+            Icon={Text}
+            inputType="textarea"
+        />
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="ctaLaunchedHeadline"
+            label="CTA Headline (After Launch)"
+            description="Headline for the final call to action section after the site has launched."
+            Icon={Rocket}
+            inputType="text"
+        />
+        <SettingForm
+            settingsMap={settingsMap}
+            settingKey="ctaLaunchedSubheadline"
+            label="CTA Subheadline (After Launch)"
+            description="Subheadline for the final call to action section after the site has launched."
             Icon={Text}
             inputType="textarea"
         />

@@ -13,6 +13,11 @@ const settingSchema = z.object({
     value: z.string(),
 });
 
+const featureSchema = z.object({
+    title: z.string().min(3, { message: "Title must be at least 3 characters." }),
+    description: z.string().min(10, { message: "Description must be at least 10 characters." }),
+    icon: z.string().min(1, { message: "Icon name is required." }),
+});
 
 export async function signInWithEmail(prevState: any, formData: FormData) {
   const supabase = createClient();
@@ -93,7 +98,6 @@ export async function updateSetting(prevState: any, formData: FormData) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // In a real app, you would also check if the user has an 'admin' role.
     if (!user) {
         return { message: "You must be logged in to do that.", success: false };
     }
@@ -107,7 +111,6 @@ export async function updateSetting(prevState: any, formData: FormData) {
         return { message: validated.error.errors[0].message, success: false };
     }
     
-    // Using upsert to either create the setting if it doesn't exist, or update it if it does.
     const { error } = await supabase
         .from('site_settings')
         .upsert({ key: validated.data.key, value: validated.data.value });
@@ -117,11 +120,67 @@ export async function updateSetting(prevState: any, formData: FormData) {
         return { message: "Failed to save setting. " + error.message, success: false };
     }
 
-    // Revalidate paths that use this setting so they show the new value
-    if (['launchDate', 'heroHeadline', 'heroSubheadline'].includes(key)) {
-        revalidatePath('/');
-    }
+    revalidatePath('/');
     revalidatePath('/admin');
 
     return { message: `Setting '${key}' saved successfully.`, success: true };
+}
+
+
+export async function addFeature(prevState: any, formData: FormData) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { message: "You must be logged in to do that.", success: false, errors: null };
+    }
+
+    const validated = featureSchema.safeParse({
+        title: formData.get('title'),
+        description: formData.get('description'),
+        icon: formData.get('icon'),
+    });
+
+    if (!validated.success) {
+        return { message: "Invalid data.", success: false, errors: validated.error.flatten().fieldErrors };
+    }
+    
+    const { error } = await supabase.from('features').insert(validated.data);
+    
+    if (error) {
+        console.error("Add feature error:", error);
+        return { message: "Failed to add feature. " + error.message, success: false, errors: null };
+    }
+
+    revalidatePath('/');
+    revalidatePath('/admin');
+
+    return { message: "Feature added successfully.", success: true, errors: null };
+}
+
+export async function deleteFeature(prevState: any, formData: FormData) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { message: "You must be logged in to do that.", success: false };
+    }
+
+    const id = formData.get('id') as string;
+
+    if (!id) {
+        return { message: "Feature ID is missing.", success: false };
+    }
+    
+    const { error } = await supabase.from('features').delete().match({ id });
+    
+    if (error) {
+        console.error("Delete feature error:", error);
+        return { message: "Failed to delete feature. " + error.message, success: false };
+    }
+
+    revalidatePath('/');
+    revalidatePath('/admin');
+
+    return { message: "Feature deleted successfully.", success: true };
 }

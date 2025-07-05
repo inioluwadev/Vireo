@@ -8,6 +8,7 @@ import { WaitlistTable } from "./waitlist-table";
 import { SiteSettings } from "./site-settings";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Terminal } from "lucide-react";
+import { FeaturesSettings } from "./features-settings";
 
 const users = [
   {
@@ -74,6 +75,14 @@ type SettingItem = {
   updated_at: string;
 };
 
+type FeatureItem = {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    created_at: string;
+}
+
 function SchemaErrorDisplay() {
   const setupSql = `-- Site Settings Table for launch date and feature flags
 CREATE TABLE IF NOT EXISTS "public"."site_settings" (
@@ -86,37 +95,36 @@ CREATE TABLE IF NOT EXISTS "public"."site_settings" (
 
 -- RLS for site_settings: Allow public read-only access
 ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public read access to site settings" ON "public"."site_settings"
-    FOR SELECT
-    USING (true);
-
--- RLS for site_settings: Allow admin full access
-CREATE POLICY "Allow full access to admin users on site settings" ON "public"."site_settings"
-    FOR ALL
-    USING ( (SELECT auth.uid() IN ( SELECT profiles.id FROM profiles WHERE profiles.role = 'admin' )) )
-    WITH CHECK ( (SELECT auth.uid() IN ( SELECT profiles.id FROM profiles WHERE profiles.role = 'admin' )) );
+CREATE POLICY "Allow public read access to site settings" ON "public"."site_settings" FOR SELECT USING (true);
+CREATE POLICY "Allow full access to admin users on site settings" ON "public"."site_settings" FOR ALL USING ((SELECT auth.uid() IN (SELECT profiles.id FROM profiles WHERE profiles.role = 'admin'))) WITH CHECK ((SELECT auth.uid() IN (SELECT profiles.id FROM profiles WHERE profiles.role = 'admin')));
 
 -- Trigger to automatically update "updated_at" timestamp on change
-CREATE OR REPLACE FUNCTION "public"."handle_site_settings_updated_at"()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = timezone('utc'::text, now());
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION "public"."handle_site_settings_updated_at"() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = timezone('utc'::text, now()); RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE TRIGGER "on_site_settings_update" BEFORE UPDATE ON "public"."site_settings" FOR EACH ROW EXECUTE PROCEDURE "public"."handle_site_settings_updated_at"();
 
-CREATE TRIGGER "on_site_settings_update"
-BEFORE UPDATE ON "public"."site_settings"
-FOR EACH ROW
-EXECUTE PROCEDURE "public"."handle_site_settings_updated_at"();
+-- Features Table
+CREATE TABLE IF NOT EXISTS "public"."features" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(), "title" TEXT NOT NULL, "description" TEXT NOT NULL, "icon" TEXT NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
--- Seed the default launchDate setting, if it doesn't already exist.
-INSERT INTO "public"."site_settings" ("key", "value", "description")
-VALUES 
-    ('launchDate', '2026-01-01T00:00:00Z', 'The target date and time for the public launch countdown timer.'),
-    ('heroHeadline', 'Vireo: Architect the Future', 'The main headline for the hero section.'),
-    ('heroSubheadline', 'Unleash your creativity with AI-powered design tools, collaborative platforms, and immersive AR/VR portfolios. The next generation of architecture starts here.', 'The subheadline for the hero section.')
+-- RLS for features: Allow public read-only access
+ALTER TABLE "public"."features" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to features" ON "public"."features" FOR SELECT USING (true);
+CREATE POLICY "Allow full access to admin users on features" ON "public"."features" FOR ALL USING ((SELECT auth.uid() IN (SELECT profiles.id FROM profiles WHERE profiles.role = 'admin'))) WITH CHECK ((SELECT auth.uid() IN (SELECT profiles.id FROM profiles WHERE profiles.role = 'admin')));
+
+-- Seed the default settings
+INSERT INTO "public"."site_settings" ("key", "value", "description") VALUES 
+('launchDate', '2026-01-01T00:00:00Z', 'The target date and time for the public launch countdown timer.'),
+('heroHeadline', 'Vireo: Architect the Future', 'The main headline for the hero section.'),
+('heroSubheadline', 'Unleash your creativity with AI-powered design tools, collaborative platforms, and immersive AR/VR portfolios. The next generation of architecture starts here.', 'The subheadline for the hero section.'),
+('featuresHeadline', 'Everything You Need to Innovate', 'The headline for the features section.'),
+('featuresSubheadline', 'Vireo provides a comprehensive toolkit for modern architects and students.', 'The subheadline for the features section.'),
+('aiInspirationHeadline', 'Never Stare at a Blank Page Again', 'The headline for the AI Inspiration section.'),
+('aiInspirationSubheadline', 'Select a few parameters and let our AI generate a unique architectural concept to kickstart your next project.', 'The subheadline for the AI Inspiration section.'),
+('ctaUpcomingHeadline', 'Ready to Build the Future?', 'The headline for the CTA section before launch.'),
+('ctaUpcomingSubheadline', 'Don''t miss out on the launch. Join the waitlist to be the first to know when Vireo is live and get exclusive early access perks.', 'The subheadline for the CTA section before launch.'),
+('ctaLaunchedHeadline', 'The Revolution Has Begun', 'The headline for the CTA section after launch.'),
+('ctaLaunchedSubheadline', 'Vireo is now live. Step into the new era of architecture and start creating your legacy today.', 'The subheadline for the CTA section after launch.')
 ON CONFLICT ("key") DO NOTHING;
 `;
 
@@ -127,11 +135,11 @@ ON CONFLICT ("key") DO NOTHING;
             <Terminal /> Database Setup Required
         </CardTitle>
         <CardDescription className="text-red-400">
-            The 'site_settings' table is missing from your database. This is required for core site functionality.
+            One or more required tables are missing from your database. This is required for core site functionality.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p>Please run the following SQL script in your Supabase SQL Editor to create the table and set the necessary permissions.</p>
+        <p>Please run the following SQL script in your Supabase SQL Editor to create the necessary tables and set permissions.</p>
         <pre className="bg-gray-900/70 p-4 rounded-md text-xs text-purple-200 overflow-x-auto">
             <code>
                 {setupSql}
@@ -147,16 +155,16 @@ export function AdminPage({
   user,
   waitlist,
   settings,
+  features,
   schemaError = false,
 }: { 
   user: User,
   waitlist: WaitlistItem[],
   settings: SettingItem[],
+  features: FeatureItem[],
   schemaError?: boolean,
 }) {
-  const launchDateSetting = settings.find(s => s.key === 'launchDate');
-  const heroHeadlineSetting = settings.find(s => s.key === 'heroHeadline');
-  const heroSubheadlineSetting = settings.find(s => s.key === 'heroSubheadline');
+  const settingsMap = new Map(settings.map(s => [s.key, s]));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-4 sm:p-6 lg:p-8">
@@ -181,7 +189,7 @@ export function AdminPage({
             <TabsList className="grid w-full grid-cols-4 bg-purple-900/50 text-purple-200 border-purple-500/50 border">
                 <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
-                <TabsTrigger value="settings">Site Controls</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="analytics" disabled>Analytics</TabsTrigger>
             </TabsList>
             
@@ -207,19 +215,26 @@ export function AdminPage({
                 </CardContent>
                 </Card>
             </TabsContent>
-            <TabsContent value="settings" className="mt-6">
+            <TabsContent value="content" className="mt-6 space-y-6">
                 <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Control the Vireo Experience</CardTitle>
-                    <CardDescription className="text-purple-300">Manage global site settings.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <SiteSettings 
-                      launchDateSetting={launchDateSetting}
-                      heroHeadlineSetting={heroHeadlineSetting}
-                      heroSubheadlineSetting={heroSubheadlineSetting}
-                    />
-                </CardContent>
+                    <CardHeader>
+                        <CardTitle className="font-headline text-2xl">Manage Homepage Content</CardTitle>
+                        <CardDescription className="text-purple-300">Control the text and settings for the main landing page.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <SiteSettings 
+                          settingsMap={settingsMap}
+                        />
+                    </CardContent>
+                </Card>
+                <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
+                    <CardHeader>
+                        <CardTitle className="font-headline text-2xl">Manage Features</CardTitle>
+                        <CardDescription className="text-purple-300">Add, edit, or remove features displayed on the homepage.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <FeaturesSettings features={features} />
+                    </CardContent>
                 </Card>
             </TabsContent>
             <TabsContent value="analytics" className="mt-6">

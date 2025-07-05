@@ -1,7 +1,6 @@
 import { AdminPage } from "@/components/admin/admin-page";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
-import type { User } from "@supabase/supabase-js";
 
 export default async function Page() {
   const supabase = createClient();
@@ -9,28 +8,25 @@ export default async function Page() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // Redirect to home page if not authenticated
     return redirect('/login');
   }
 
-  // Fetch waitlist data
-  const { data: waitlist, error: waitlistError } = await supabase
-    .from('waitlist')
-    .select('email, created_at')
-    .order('created_at', { ascending: false });
+  // Fetch all data in parallel
+  const [
+    { data: waitlist, error: waitlistError },
+    { data: settings, error: settingsError },
+    { data: features, error: featuresError }
+  ] = await Promise.all([
+    supabase.from('waitlist').select('email, created_at').order('created_at', { ascending: false }),
+    supabase.from('site_settings').select('*'),
+    supabase.from('features').select('*').order('created_at', { ascending: true })
+  ]);
 
-  // Fetch settings data
-  const { data: settings, error: settingsError } = await supabase
-    .from('site_settings')
-    .select('*');
-
-  // Check for the specific "table does not exist" error (PostgreSQL code 42P01)
-  const schemaError = settingsError?.code === '42P01';
+  const schemaError = settingsError?.code === '42P01' || featuresError?.code === '42P01';
 
   if (waitlistError) console.error("Error fetching waitlist:", waitlistError.message);
-  // Only log settings error if it's not the one we are handling in the UI
+  if (featuresError && !schemaError) console.error("Error fetching features:", featuresError.message);
   if (settingsError && !schemaError) console.error("Error fetching settings:", settingsError.message);
-
 
   return (
     <main>
@@ -38,6 +34,7 @@ export default async function Page() {
         user={user} 
         waitlist={waitlist ?? []}
         settings={settings ?? []}
+        features={features ?? []}
         schemaError={schemaError}
       />
     </main>
