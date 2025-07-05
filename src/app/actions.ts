@@ -5,8 +5,14 @@ import { generateArchitectureConcept as genArch } from "@/ai/flows/generate-arch
 import type { GenerateArchitectureConceptInput } from "@/ai/flows/generate-architecture-concept";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 const emailSchema = z.string().email({ message: "Please enter a valid email address." });
+const settingSchema = z.object({
+    key: z.string(),
+    value: z.string(),
+});
+
 
 export async function signInWithEmail(prevState: any, formData: FormData) {
   const supabase = createClient();
@@ -80,4 +86,42 @@ export async function generateArchitectureConcept(
       error: "Failed to generate concept. Please try again later.",
     };
   }
+}
+
+
+export async function updateSetting(prevState: any, formData: FormData) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // In a real app, you would also check if the user has an 'admin' role.
+    if (!user) {
+        return { message: "You must be logged in to do that.", success: false };
+    }
+
+    const key = formData.get('key') as string;
+    const value = formData.get('value') as string;
+
+    const validated = settingSchema.safeParse({ key, value });
+
+    if (!validated.success) {
+        return { message: validated.error.errors[0].message, success: false };
+    }
+    
+    const { error } = await supabase
+        .from('site_settings')
+        .update({ value: validated.data.value })
+        .eq('key', validated.data.key);
+    
+    if (error) {
+        console.error("Update setting error:", error);
+        return { message: "Failed to update setting. " + error.message, success: false };
+    }
+
+    // Revalidate paths that use this setting so they show the new value
+    if (key === 'launchDate') {
+        revalidatePath('/');
+    }
+    revalidatePath('/admin');
+
+    return { message: `Setting '${key}' updated successfully.`, success: true };
 }

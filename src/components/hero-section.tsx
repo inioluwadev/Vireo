@@ -1,9 +1,7 @@
 import { Countdown } from "@/components/countdown";
 import { WaitlistForm } from "./waitlist-form";
 
-export function HeroSection() {
-  const launchDate = new Date("2026-01-01T00:00:00Z");
-
+export function HeroSection({ launchDate }: { launchDate: Date }) {
   return (
     <section className="py-20 md:py-32 bg-gradient-to-br from-background to-secondary">
       <div className="container px-4 md:px-6">

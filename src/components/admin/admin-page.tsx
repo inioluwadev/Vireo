@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { User } from "@supabase/supabase-js";
 import { Button } from "../ui/button";
 import { signOut } from "@/app/actions";
+import { WaitlistTable } from "./waitlist-table";
+import { SiteSettings } from "./site-settings";
 
 const users = [
   {
@@ -56,7 +58,31 @@ const users = [
   },
 ];
 
-export function AdminPage({ user }: { user: User }) {
+
+type WaitlistItem = {
+  email: string;
+  created_at: string;
+};
+
+type SettingItem = {
+  key: string;
+  value: string | null;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function AdminPage({ 
+  user,
+  waitlist,
+  settings,
+}: { 
+  user: User,
+  waitlist: WaitlistItem[],
+  settings: SettingItem[],
+}) {
+  const launchDateSetting = settings.find(s => s.key === 'launchDate');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -75,34 +101,46 @@ export function AdminPage({ user }: { user: User }) {
 
         <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-purple-900/50 text-purple-200 border-purple-500/50 border">
-            <TabsTrigger value="users">Batch 1: Users</TabsTrigger>
-            <TabsTrigger value="content" disabled>Batch 2: Content</TabsTrigger>
-            <TabsTrigger value="features" disabled>Batch 3: Features</TabsTrigger>
-            <TabsTrigger value="analytics" disabled>Batch 4: Analytics</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
+            <TabsTrigger value="settings">Site Controls</TabsTrigger>
+            <TabsTrigger value="analytics" disabled>Analytics</TabsTrigger>
           </TabsList>
           
           <TabsContent value="users" className="mt-6">
             <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Manage Your Community</CardTitle>
-                <CardDescription className="text-purple-300">View, ban, or promote users to admins.</CardDescription>
+                <CardDescription className="text-purple-300">View, ban, or promote users to admins. (Demo data)</CardDescription>
               </CardHeader>
               <CardContent>
                 <UsersTable users={users} />
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="content">
-            <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white h-96 flex items-center justify-center">
-                <CardTitle>Content Management Coming Soon</CardTitle>
+          <TabsContent value="waitlist" className="mt-6">
+            <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">Waitlist Members</CardTitle>
+                <CardDescription className="text-purple-300">See who's excited for the Vireo launch.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WaitlistTable waitlist={waitlist} />
+              </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="features">
-             <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white h-96 flex items-center justify-center">
-                <CardTitle>Feature Toggles Coming Soon</CardTitle>
+          <TabsContent value="settings" className="mt-6">
+            <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">Control the Vireo Experience</CardTitle>
+                <CardDescription className="text-purple-300">Manage global site settings.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SiteSettings setting={launchDateSetting} />
+              </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="mt-6">
             <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30 text-white h-96 flex items-center justify-center">
                 <CardTitle>Analytics Coming Soon</CardTitle>
             </Card>
