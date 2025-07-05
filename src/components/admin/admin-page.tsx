@@ -113,7 +113,10 @@ EXECUTE PROCEDURE "public"."handle_site_settings_updated_at"();
 
 -- Seed the default launchDate setting, if it doesn't already exist.
 INSERT INTO "public"."site_settings" ("key", "value", "description")
-VALUES ('launchDate', '2026-01-01T00:00:00Z', 'The target date and time for the public launch countdown timer.')
+VALUES 
+    ('launchDate', '2026-01-01T00:00:00Z', 'The target date and time for the public launch countdown timer.'),
+    ('heroHeadline', 'Vireo: Architect the Future', 'The main headline for the hero section.'),
+    ('heroSubheadline', 'Unleash your creativity with AI-powered design tools, collaborative platforms, and immersive AR/VR portfolios. The next generation of architecture starts here.', 'The subheadline for the hero section.')
 ON CONFLICT ("key") DO NOTHING;
 `;
 
@@ -152,6 +155,8 @@ export function AdminPage({
   schemaError?: boolean,
 }) {
   const launchDateSetting = settings.find(s => s.key === 'launchDate');
+  const heroHeadlineSetting = settings.find(s => s.key === 'heroHeadline');
+  const heroSubheadlineSetting = settings.find(s => s.key === 'heroSubheadline');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-4 sm:p-6 lg:p-8">
@@ -209,7 +214,11 @@ export function AdminPage({
                     <CardDescription className="text-purple-300">Manage global site settings.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <SiteSettings setting={launchDateSetting} />
+                    <SiteSettings 
+                      launchDateSetting={launchDateSetting}
+                      heroHeadlineSetting={heroHeadlineSetting}
+                      heroSubheadlineSetting={heroSubheadlineSetting}
+                    />
                 </CardContent>
                 </Card>
             </TabsContent>

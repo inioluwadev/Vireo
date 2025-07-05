@@ -1,7 +1,15 @@
 import { Countdown } from "@/components/countdown";
 import { WaitlistForm } from "./waitlist-form";
 
-export function HeroSection({ launchDate }: { launchDate: Date }) {
+export function HeroSection({ 
+  launchDate, 
+  headline, 
+  subheadline 
+}: { 
+  launchDate: Date,
+  headline: string,
+  subheadline: string,
+}) {
   const isLaunched = new Date() > launchDate;
 
   return (
@@ -10,10 +18,10 @@ export function HeroSection({ launchDate }: { launchDate: Date }) {
         <div className="grid gap-10 items-center">
           <div className="flex flex-col justify-center space-y-4 text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-headline tracking-tighter">
-              Vireo: Architect the Future
+              {headline}
             </h1>
             <p className="mx-auto max-w-[600px] text-foreground/80 md:text-xl">
-              Unleash your creativity with AI-powered design tools, collaborative platforms, and immersive AR/VR portfolios. The next generation of architecture starts here.
+              {subheadline}
             </p>
           </div>
           

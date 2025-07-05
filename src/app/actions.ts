@@ -118,7 +118,7 @@ export async function updateSetting(prevState: any, formData: FormData) {
     }
 
     // Revalidate paths that use this setting so they show the new value
-    if (key === 'launchDate') {
+    if (['launchDate', 'heroHeadline', 'heroSubheadline'].includes(key)) {
         revalidatePath('/');
     }
     revalidatePath('/admin');
