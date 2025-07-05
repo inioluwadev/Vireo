@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { generateArchitectureConcept as genArch } from "@/ai/flows/generate-architecture-concept";
 import type { GenerateArchitectureConceptInput } from "@/ai/flows/generate-architecture-concept";
+import { supabase } from "@/lib/supabase";
 
 const emailSchema = z.string().email({ message: "Please enter a valid email address." });
 
@@ -18,12 +19,19 @@ export async function addToWaitlist(
   }
 
   try {
-    // Here you would save to a database like Supabase
-    console.log(
-      `Email added to waitlist: ${
-        validated.data
-      } at ${new Date().toISOString()}`
-    );
+    const { error } = await supabase
+      .from('waitlist')
+      .insert({ email: validated.data });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      // Check for unique constraint violation (duplicate email)
+      if (error.code === '23505') {
+           return { message: "This email is already on the waitlist.", success: false };
+      }
+      return { message: "Something went wrong. Please try again.", success: false };
+    }
+
     return {
       message: "Thank you! You're on the waitlist.",
       success: true,
