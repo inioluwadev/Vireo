@@ -1,6 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UsersTable } from "@/components/admin/users-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { User } from "@supabase/supabase-js";
+import { Button } from "../ui/button";
+import { signOut } from "@/app/actions";
 
 const users = [
   {
@@ -53,13 +56,21 @@ const users = [
   },
 ];
 
-export function AdminPage() {
+export function AdminPage({ user }: { user: User }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold font-headline tracking-tighter">Vireo Admin</h1>
-          <p className="text-purple-200">Manage your MADD ecosystem.</p>
+        <header className="mb-8 flex justify-between items-start sm:items-center">
+          <div>
+            <h1 className="text-4xl font-bold font-headline tracking-tighter">Vireo Admin</h1>
+            <p className="text-purple-200">Manage your MADD ecosystem.</p>
+          </div>
+           <div className="flex items-center gap-4">
+            <span className="text-sm text-purple-300 hidden sm:inline">{user.email}</span>
+            <form action={signOut}>
+                <Button variant="outline" className="bg-transparent border-purple-500/50 hover:bg-purple-500/20 hover:text-white">Sign Out</Button>
+            </form>
+          </div>
         </header>
 
         <Tabs defaultValue="users" className="w-full">
